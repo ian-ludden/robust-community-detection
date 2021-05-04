@@ -8,6 +8,8 @@ from pprint import pprint
 import random
 import sys
 
+DEBUG = False
+
 def load_graph_from_txt(edges_fname):
     """
     Given a text file with a "<src> <dest>" edge pair on each line, 
@@ -25,6 +27,16 @@ def load_graph_from_txt(edges_fname):
     return graph
 
 
+def save_graph_to_txt(graph, filename='graph.txt'):
+    """
+    Saves a networkx Graph object 
+    to a text file with a "<src> <dest>" edge pair on each line. 
+    """
+    with open(filename, 'w') as f:
+        for edge in graph.edges:
+            f.write('{0} {1}\n'.format(edge[0], edge[1]))
+
+
 def load_assignment_from_txt(asst_fname):
     """
     Given a text file with a "<node> <part>" pair on each line, 
@@ -40,9 +52,61 @@ def load_assignment_from_txt(asst_fname):
     return assignment
 
 
+def execute_dice(graph, targets, b=4, d=2):
+    """
+    Runs one iteration of the "disconnect internally, connect externally (DICE)" 
+    heuristic from Waniek et al. (2018) for concealing a set of target nodes. 
+
+    Modifies and returns the input graph. 
+    """
+    internal_edges = []
+    for edge in graph.edges:
+        if edge[0] in targets and edge[1] in targets:
+            internal_edges.append(edge)
+
+    edges_to_remove = random.sample(internal_edges, min(d, len(internal_edges)))
+    for edge in edges_to_remove:
+        graph.remove_edge(edge[0], edge[1])
+
+    targets_to_connect = random.sample(targets, min(b - d, len(targets)))
+    nontargets = set(graph.nodes).difference(set(targets))
+    nontargets_to_connect = random.sample(nontargets, min(b - d, len(nontargets)))
+    edges_to_add = zip(targets_to_connect, nontargets_to_connect)
+    for edge in edges_to_add:
+        graph.add_edge(edge[0], edge[1])
+
+    return graph
+
+
+def add_edge_noise(graph, beta):
+    """
+    Randomly toggles every possible edge on/off 
+    with probability beta of staying the same and 
+    probability (1-beta) of switching. 
+
+    Returns a copy of the given graph after applying the edge noise. 
+    """
+    assert(0 < beta and beta < 1)
+    if DEBUG: print('Perturbing: beta = {0:.3f}'.format(beta))
+    noisy_graph = graph.copy()
+    for i in noisy_graph.nodes:
+        for j in noisy_graph.nodes:
+            if i >= j:
+                continue
+            u = random.random()
+            if u > beta:
+                if (i, j) in graph.edges:
+                    noisy_graph.remove_edge(i, j)
+                    if DEBUG: print('\tRemoving edge {0} <--> {1}.'.format(i, j))
+                else:
+                    noisy_graph.add_edge(i, j)
+                    if DEBUG: print('\tAdding edge {0} <--> {1}.'.format(i, j))
+
+    return noisy_graph
+
+
 def concealment_1(graph, assignment, targets):
     """
-    TODO: implement
     Given a graph, an assignment into partitions/clusters, 
     and a set of target vertices (a.k.a. evaders), 
     computes the first concealment measure, mu prime, 
@@ -102,6 +166,7 @@ def concealment_combined(graph, assignment, targets, alpha):
 if __name__ == '__main__':
     USAGE_STR = 'Usage: \n\tpython utils.py [edges filepath] [assignment filepath]'
     ALPHA = 0.5
+    BETA = 0.7
 
     if len(sys.argv) < 2: 
         raise Exception('Missing arguments: edges and assignment filepaths.\n{0}'.format(USAGE_STR))
@@ -113,6 +178,8 @@ if __name__ == '__main__':
     graph = load_graph_from_txt(edges_fname)
     assignment = load_assignment_from_txt(asst_fname)
 
+
+    ##################################################################
     # Test concealment
 
     ## Handle sample from Waniek et al. Figure 4 differently
@@ -131,3 +198,32 @@ if __name__ == '__main__':
     print('Concealment 1: {0:.3f}\nConcealment 2: {1:.3f}\nCombined: {2:.3f}'.format(c1, c2, c))
 
     print()
+
+
+    ##################################################################
+    # Test randomized smoothing
+
+    graph2 = add_edge_noise(graph, BETA)
+    graph3 = add_edge_noise(graph, BETA)
+
+    print('Original:')
+    pprint(graph.edges)
+    save_graph_to_txt(graph)
+    
+    print('Perturbed Graph (2):')
+    pprint(graph2.edges)
+    save_graph_to_txt(graph2, 'graph2.txt')
+
+    print('Perturbed Graph (3):')
+    pprint(graph3.edges)
+    save_graph_to_txt(graph3, 'graph3.txt')
+
+    ##################################################################
+    # Test DICE heuristic
+
+    graph4 = graph.copy()
+    for i in range(1, len(targets) + 1):
+        print('\n### Iteration {0} ###'.format(i))
+        graph4 = execute_dice(graph4, targets)
+        pprint(graph4.edges)
+
