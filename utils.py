@@ -23,7 +23,7 @@ def load_graph_from_txt(edges_fname):
             src, dest = line.strip('\n').split(' ')
             graph.add_edge(src, dest)
 
-    print('{0} nodes, {1} edges'.format(graph.number_of_nodes(), graph.number_of_edges()))
+    if DEBUG: print('{0} nodes, {1} edges'.format(graph.number_of_nodes(), graph.number_of_edges()))
     return graph
 
 
@@ -166,7 +166,7 @@ def concealment_combined(graph, assignment, targets, alpha):
 if __name__ == '__main__':
     USAGE_STR = 'Usage: \n\tpython utils.py [edges filepath] [assignment filepath]'
     ALPHA = 0.5
-    BETA = 0.7
+    BETA = 0.9
 
     if len(sys.argv) < 2: 
         raise Exception('Missing arguments: edges and assignment filepaths.\n{0}'.format(USAGE_STR))
