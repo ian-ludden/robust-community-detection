@@ -8,7 +8,7 @@ from pprint import pprint
 import random
 import sys
 
-DEBUG = False
+DEBUG = True
 
 def load_graph_from_txt(edges_fname):
     """
@@ -21,7 +21,8 @@ def load_graph_from_txt(edges_fname):
     with open(edges_fname, 'r') as f:
         for line in f:
             src, dest = line.strip('\n').split(' ')
-            graph.add_edge(src, dest)
+            if src != dest: # Omit any self-loops
+                graph.add_edge(src, dest)
 
     if DEBUG: print('{0} nodes, {1} edges'.format(graph.number_of_nodes(), graph.number_of_edges()))
     return graph
@@ -59,21 +60,27 @@ def execute_dice(graph, targets, b=4, d=2):
 
     Modifies and returns the input graph. 
     """
+    if DEBUG: print('Targets: {0}'.format(targets))
     internal_edges = []
     for edge in graph.edges:
         if edge[0] in targets and edge[1] in targets:
             internal_edges.append(edge)
+    if DEBUG and internal_edges:
+        print('There are {0} internal edges: {1}'.format(len(internal_edges), internal_edges))
 
     edges_to_remove = random.sample(internal_edges, min(d, len(internal_edges)))
     for edge in edges_to_remove:
         graph.remove_edge(edge[0], edge[1])
+        if DEBUG: print('\tRemoving edge {0} <--> {1}.'.format(edge[0], edge[1]))
 
     targets_to_connect = random.sample(targets, min(b - d, len(targets)))
     nontargets = set(graph.nodes).difference(set(targets))
     nontargets_to_connect = random.sample(nontargets, min(b - d, len(nontargets)))
+    
     edges_to_add = zip(targets_to_connect, nontargets_to_connect)
     for edge in edges_to_add:
         graph.add_edge(edge[0], edge[1])
+        if DEBUG: print('\tAdding edge {0} <--> {1}.'.format(edge[0], edge[1]))
 
     return graph
 
@@ -86,21 +93,17 @@ def add_edge_noise(graph, beta):
 
     Returns a copy of the given graph after applying the edge noise. 
     """
-    assert(0 < beta and beta < 1)
-    if DEBUG: print('Perturbing: beta = {0:.3f}'.format(beta))
     noisy_graph = graph.copy()
     for i in noisy_graph.nodes:
         for j in noisy_graph.nodes:
-            if i >= j:
+            if int(i) >= int(j):
                 continue
             u = random.random()
             if u > beta:
                 if (i, j) in graph.edges:
                     noisy_graph.remove_edge(i, j)
-                    if DEBUG: print('\tRemoving edge {0} <--> {1}.'.format(i, j))
                 else:
                     noisy_graph.add_edge(i, j)
-                    if DEBUG: print('\tAdding edge {0} <--> {1}.'.format(i, j))
 
     return noisy_graph
 

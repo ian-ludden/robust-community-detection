@@ -36,7 +36,8 @@ do
         do
             ((step_count=step_count+1))
             echo "Step" "$step_count" >> "$LOG_FILE"
-            py run_dice.py graph.txt $targets_index
+            echo "    Concealment,Detected" >> "$LOG_FILE"
+            py run_dice.py graph.txt $target_list
 
             for iteration in $(seq 1 $N)
             do

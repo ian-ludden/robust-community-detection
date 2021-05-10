@@ -7,8 +7,8 @@ import utils
 
 DEBUG = False
 USAGE_STR = 'Usage: \n\tpython utils.py [edges filepath] [assignment filepath]'
-BETA = 0.7
-TARGET_SIZES = [2, 4, 6, 8, 10]
+TARGET_SIZES = [4, 6, 8]
+SAMPLES_PER_COMMUNITY = 2
 
 if __name__ == '__main__':
     if len(sys.argv) < 2: 
@@ -27,10 +27,13 @@ if __name__ == '__main__':
     with open('targets.txt', 'w') as f:
         # For each candidate target_size, 
         # randomly sample two sets of target_size nodes from 
-        # every ground-truth community whose size is greater than target_size. 
+        # every ground-truth community whose size is 
+        # greater than twice the target_size and 
+        # at most four times the target_size. 
         for target_size in TARGET_SIZES:
             for community in communities:
-                if len(communities[community]) > target_size:
-                    for j in range(2):
+                community_size = len(communities[community])
+                if target_size <= community_size and community_size < 4 * target_size:
+                    for j in range(SAMPLES_PER_COMMUNITY): # Pick samples from community
                         targets = random.sample(communities[community], target_size)
                         f.write('{0}\n'.format(' '.join(targets)))

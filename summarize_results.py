@@ -30,4 +30,4 @@ if __name__ == '__main__':
 
 
     with open('results.out', 'a+') as f:
-        f.write('\tconcealment={0:.4f},detected={1}\n'.format(concealment, int(is_detected)))
+        f.write('\t{0:.4f},{1}\n'.format(concealment, int(is_detected)))
