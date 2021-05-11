@@ -211,7 +211,7 @@ if __name__ == '__main__':
 
     print('Original:')
     pprint(graph.edges)
-    save_graph_to_txt(graph)
+    save_graph_to_txt(graph, 'graph_og.txt')
     
     print('Perturbed Graph (2):')
     pprint(graph2.edges)
