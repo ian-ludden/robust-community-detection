@@ -19,8 +19,6 @@ for trial in $(seq 1 $T)
 do
     echo "Trial $trial"
     echo "Trial $trial" >> "$LOG_FILE"
-    # Create fresh copy of the Email-EU core graph in this folder. 
-    cp data/email.txt graph.txt
 
     NUM_TARGETS=$(wc -l < "targets.txt")
     # echo "There are" $NUM_TARGETS "lines in targets.txt."
@@ -29,6 +27,9 @@ do
     do
         echo $target_list
         echo $target_list >> "$LOG_FILE"
+
+        # Create fresh copy of the Email-EU core graph in this folder. 
+        cp data/email.txt graph.txt
 
         # Run |target_list| steps of DICE, then randomized smoothing
         step_count=0
