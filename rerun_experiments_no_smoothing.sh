@@ -3,14 +3,24 @@
 # run_experiments.sh, but without randomized smoothing, 
 # to use as a control. 
 
-LOG_FILE="results_no_smoothing.out"
+LOG_FILE="results.out"
+
+# Run Louvain method to find initial communities
+convert_louvain.exe -i data/email.txt -o data/email.bin
+louvain.exe data/email.bin -l -1 -v -q id_qual > data/email.tree
+hierarchy_out=$(hierarchy.exe data/email.tree)
+IFS=' ' read -ra hierarchy_out_words <<< "$hierarchy_out"
+max_level=$(expr "${hierarchy_out_words[3]}" - 1)
+echo "max level:" $max_level
+echo ""
+hierarchy.exe data/email.tree -l $max_level > data/initial_louvain_communities.txt
 
 # Select target (a.k.a. victim) sets for splitting attacks
-py pick_targets.py data/email.txt data/email_labels.txt
+py pick_targets.py data/email.txt data/initial_louvain_communities.txt
 dos2unix targets.txt
 
 # Iterate over T trials
-T=1 # Number of trials
+T=5 # Number of trials
 echo "Running experiments with" $T "trials"
 for trial in $(seq 1 $T)
 do
