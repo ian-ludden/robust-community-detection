@@ -31,7 +31,9 @@ do
         # Create fresh copy of the Email-EU core graph in this folder. 
         cp data/email.txt graph.txt
 
-        # Run |target_list| steps of DICE, then randomized smoothing
+        # Run |target_list| steps of: 
+        # (1) DICE, then 
+        # (2) N iterations of randomized smoothing. 
         step_count=0
         for target in $target_list
         do

@@ -10,7 +10,7 @@ py pick_targets.py data/email.txt data/email_labels.txt
 dos2unix targets.txt
 
 # Iterate over T trials
-T=5 # Number of trials
+T=1 # Number of trials
 echo "Running experiments with" $T "trials"
 for trial in $(seq 1 $T)
 do
@@ -27,7 +27,15 @@ do
         # Create fresh copy of the Email-EU core graph in this folder. 
         cp data/email.txt graph.txt
 
-        # Run |target_list| steps of DICE, then randomized smoothing
+        # TODO: consider running Louvain with 0 executions of DICE 
+        # to determine initial concealment. 
+        # 
+        # It could be that DICE is having little/no observed effect because 
+        # we are picking targets from ground-truth communities instead of 
+        # from initial Louvain communities. If Louvain is already confused, 
+        # then DICE isn't really needed/helpful. 
+
+        # Run |target_list| steps of DICE
         step_count=0
         for target in $target_list
         do
